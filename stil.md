@@ -39,6 +39,31 @@ Medijan duljine vlastitog teksta: ~110 znakova; 90 % poruka kraće od ~930 znako
 - "Poštovana," / "Poštovani,"; jedna-dvije rečenice ("odgovara nam ponuđeno.", "prvo Slime, zatim Kostanje.").
 - Završetak: "LP,\nVedran".
 
+## Novi mailovi (sastavljanje od nule)
+Analiza 857 novih (ne-odgovor) mailova iz Poslanih, svibanj 2024. – studeni 2026.: medijan ~310 znakova vlastitog teksta, 90 % kraće od ~1.300 znakova.
+
+### Naslov
+- Kratka imenička fraza koja imenuje temu, bez glagola i bez točke: "Isplata neiskorištenog GO", "Bilanca", "DOF 2026", "Masterplan Gredelj", "Obračunske 10/2026".
+- Kod projekata obrazac "[projekt / grupa / k.o.] - [tema]": "Grupa 10 - K.I. Nikšić - promjena KS 1", "UAS - okončana situacija G1", "Rakovica - dopuna mjesečnog izvješća", "ISPU faktura - isporuka listopad".
+- Prema naručiteljima kod ugovornih dopisa i izvješća: puni službeni naziv ugovora/usluge (npr. "Katastarska izmjera i izrada elaborata katastarske izmjere za … - Grupa 2"), po potrebi s brojem izvješća na početku.
+- Prema JLS kod katastarske izmjere: "Katastarska izmjera k.o. [naziv] – [tema]".
+
+### Početak
+- Prvi red je samo pozdrav, a tekst ide u novi red i počinje MALIM slovom: "Poštovana,\nu prilogu dostavljam…", "Bok,\nmožeš li…".
+- Poznatim vanjskim suradnicima često samo ime u vokativu bez pozdrava: "[Ime],\nmolio bih račun…", "[Ime],\nu prilogu ugovor…".
+- Skupini: "Poštovani kolege," / "Poštovane/i," / "Bok dečki,".
+- Prva rečenica odmah kaže svrhu: "u prilogu dostavljam…", "nastavno na Vaš upit / naš razgovor…", "molio bih Vas/te…", "možeš li…", "obraćam Vam se nastavno na…" (samo u prvom kontaktu s nekim).
+
+### Tijelo
+- Jedan do tri kratka odlomka; kod više stavki natuknice ("*") s konkretnim podacima.
+- Zahtjev za račun/fakturu uvijek sadrži: za što, iznos "xx.xxx,xx € + PDV", datum računa i valutu plaćanja ("datum računa 14.11., valuta 30 dana").
+- Kod delegiranja kolegama: što, rok, gdje su podaci (putanja mape ako je relevantna).
+- Formalni mailovi naručiteljima/strankama završavaju po potrebi s: "Na raspolaganju sam za eventualna pitanja i pojašnjenja."
+
+### Završetak i potpis
+- Outlook na računalu sam dodaje potpis "Srdačan pozdrav / Vedran Car / Direktor" s adresom i telefonima. Kad je taj potpis uključen, nacrt formalnog maila NE smije imati vlastiti završni pozdrav ni potpis.
+- Neformalni mailovi (interno, poznati suradnici) završavaju kratko umjesto službenog potpisa: "LP,\nVedran", "Hvala,\nVedran", "Vedran" ili samo "V.".
+
 ## Što nacrt NE smije
 - Izmišljati činjenice, iznose, datume ili obećanja kojih nema u izvornoj poruci ili uputi – umjesto toga ostavi oznaku [DOPUNITI: …].
 - Biti dulji od potrebnog; ne prepričavati izvornu poruku.

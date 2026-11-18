@@ -6,7 +6,7 @@
            xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
            xsi:type="MailApp">
   <Id>918765cb-09d6-4848-86cf-cf86fc77cd33</Id>
-  <Version>1.0.0.0</Version>
+  <Version>1.1.0.0</Version>
   <ProviderName>Cadcom d.o.o.</ProviderName>
   <DefaultLocale>hr-HR</DefaultLocale>
   <DisplayName DefaultValue="Prijedlog odgovora"/>
@@ -32,10 +32,16 @@
         <RequestedHeight>450</RequestedHeight>
       </DesktopSettings>
     </Form>
+    <Form xsi:type="ItemEdit">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://vedran577.github.io/cadcom-reply/taskpane.html"/>
+      </DesktopSettings>
+    </Form>
   </FormSettings>
-  <Permissions>ReadItem</Permissions>
+  <Permissions>ReadWriteItem</Permissions>
   <Rule xsi:type="RuleCollection" Mode="Or">
     <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Edit"/>
   </Rule>
   <DisableEntityHighlighting>false</DisableEntityHighlighting>
 
@@ -70,6 +76,28 @@
               </Group>
             </OfficeTab>
           </ExtensionPoint>
+          <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="cadcomComposeGroup">
+                <Label resid="groupLabel"/>
+                <Control xsi:type="Button" id="cadcomComposeButton">
+                  <Label resid="composeLabel"/>
+                  <Supertip>
+                    <Title resid="composeLabel"/>
+                    <Description resid="composeDesc"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="icon16"/>
+                    <bt:Image size="32" resid="icon32"/>
+                    <bt:Image size="80" resid="icon80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="taskpaneUrl"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
         </DesktopFormFactor>
       </Host>
     </Hosts>
@@ -85,9 +113,11 @@
       <bt:ShortStrings>
         <bt:String id="groupLabel" DefaultValue="Cadcom"/>
         <bt:String id="buttonLabel" DefaultValue="Predloži odgovor"/>
+        <bt:String id="composeLabel" DefaultValue="Sastavi mail"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="buttonDesc" DefaultValue="Napiše nacrt odgovora na ovaj mail u vašem stilu."/>
+        <bt:String id="composeDesc" DefaultValue="Napiše nacrt novog maila u vašem stilu prema kratkoj uputi."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
