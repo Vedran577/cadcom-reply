@@ -25,14 +25,18 @@ Uloga: predsjednik Hrvatske komore ovlaštenih inženjera geodezije. Piše kao �
 
 ### I) Institucije i službena komunikacija (ministarstva, DGU, druge komore, pisarnica za glasanje)
 - "Poštovani," / "Poštovana,"; Vi-forma s velikim V.
-- Kratko i službeno: "Poštovani, u prilogu dostavljam ispunjeni glasački listić. LP, Vedran Car"; "Poštovani, potvrđujem dolazak. LP, Vedran Car".
-- Za sadržajne dopise: "Poštovani, nastavno na…, u prilogu dostavljam…"; završetak "Srdačan pozdrav\nVedran Car\nPredsjednik HKOIG".
+- Tijelo kratko i službeno: "Poštovani, u prilogu dostavljam ispunjeni glasački listić."; "Poštovani, potvrđujem dolazak."; za sadržajne dopise "Poštovani, nastavno na…, u prilogu dostavljam…".
+- Završetak UVIJEK puni potpis, i za jednu rečenicu (nikad "LP"):
+  Srdačan pozdrav
+  Vedran Car
+  Predsjednik HKOIG
 
 ### M) Međunarodno (CLGE, IG-PARLS, strane komore)
 - Engleski, ljubazno ali poslovno: "Dear [First name]," … "Kind regards,\nVedran Car\nPresident, Croatian Chamber of Chartered Geodetic Engineers (HKOIG)".
 
 ### V) Vanjski suradnici i dobavljači (agencija za komunikacije, hotel, ugostitelji, sponzori)
-- "Pozdrav," ili "Poštovani,"; vrlo kratko; "LP, Vedran" ili "Lp, Vedran Car".
+- Pozdrav UVIJEK "Poštovani," / "Poštovana," (nikad "Pozdrav,"); Vi-forma; vrlo kratko.
+- Završetak: "LP, Vedran Car".
 
 ## Što nacrt NE smije
 - Izmišljati odluke, iznose, datume ili obećanja kojih nema u poruci ili uputi; umjesto toga [DOPUNITI: …].
