@@ -41,14 +41,7 @@
 
 <div id="main" class="hidden">
   <label for="reg">Registar</label>
-  <select id="reg">
-    <option value="auto">Automatski (prema pošiljatelju)</option>
-    <option value="A">A – interno (Cadcom/Darna), ti-forma</option>
-    <option value="B">B – poznati vanjski suradnik</option>
-    <option value="C">C – institucija / naručitelj, Vi-forma</option>
-    <option value="D">D – kandidat / stranka, Vi-forma</option>
-    <option value="E">E – dobavljač / mediji, vrlo kratko</option>
-  </select>
+  <select id="reg"></select>
 
   <label for="intent">Što želite poručiti? <span class="mut">(neobavezno)</span></label>
   <textarea id="intent" rows="3" placeholder="npr. prihvati, predloži utorak u 10 h; ili: odbij ljubazno; ili: traži nadopunu podataka do petka"></textarea>
@@ -90,6 +83,30 @@ const LS_KEY = 'cadcom_reply_apikey';
 const LS_MODEL = 'cadcom_reply_model';
 const MAX_BODY = 15000;
 
+// Profili po računu: Cadcom (zadano) i HKOIG.
+const PROFILES = {
+  cadcom: {
+    file: 'stil.md',
+    who: 'Vedrana Cara, direktora tvrtke Cadcom d.o.o. (geodetske usluge, Zagreb)',
+    regs: [['A', 'A – interno (Cadcom/Darna), ti-forma'], ['B', 'B – poznati vanjski suradnik'], ['C', 'C – institucija / naručitelj, Vi-forma'], ['D', 'D – kandidat / stranka, Vi-forma'], ['E', 'E – dobavljač / mediji, vrlo kratko']],
+    guess: email => guessRegister(email)
+  },
+  hkoig: {
+    file: 'stil-hkoig.md',
+    who: 'Vedrana Cara, predsjednika Hrvatske komore ovlaštenih inženjera geodezije (HKOIG)',
+    regs: [['T', 'T – Tajništvo Komore'], ['K', 'K – kolege dužnosnici / članovi'], ['I', 'I – institucije, Vi-forma'], ['M', 'M – međunarodno (engleski)'], ['V', 'V – vanjski suradnici / dobavljači']],
+    guess: email => {
+      const d = (email.split('@')[1] || '').toLowerCase();
+      if (d === 'hkoig.hr') return 'T ili K (prema potpisu pošiljatelja: zaposlenik Tajništva = T, dužnosnik/član = K)';
+      if (/\.(hr)$/.test(d) && /(gov|dgu|mpgi|mpudt|mingo|mfin|komora|hka|hkig|hkis|hkie|hkiz|hkas)/.test(d)) return 'I';
+      if (!/\.hr$/.test(d) && !/(gmail|outlook|hotmail|yahoo)\./.test(d)) return 'M';
+      if (/(gmail|outlook|hotmail|yahoo|icloud)\./.test(d)) return 'K';
+      return 'I ili V (procijeni iz sadržaja)';
+    }
+  }
+};
+let profile = PROFILES.cadcom;
+
 // Domene za automatski izbor registra (iz analize poslane pošte).
 const DOMAINS = {
   A: ['cadcom.hr', 'darnadar.hr', 'darna.biz'],
@@ -111,7 +128,7 @@ let mail = null, styleGuide = '';
 const $ = id => document.getElementById(id);
 
 async function loadStyle() {
-  try { styleGuide = await (await fetch('stil.md', { cache: 'no-cache' })).text(); }
+  try { styleGuide = await (await fetch(profile.file, { cache: 'no-cache' })).text(); }
   catch (e) { styleGuide = ''; }
 }
 
@@ -143,9 +160,9 @@ async function suggest() {
   $('err').textContent = '';
   const key = localStorage.getItem(LS_KEY);
   if (!key) return showMain();
-  const reg = $('reg').value === 'auto' ? guessRegister(mail.fromEmail) : $('reg').value;
+  const reg = $('reg').value === 'auto' ? profile.guess(mail.fromEmail) : $('reg').value;
   const system =
-`Ti pišeš nacrte odgovora na e-mailove u ime Vedrana Cara, direktora tvrtke Cadcom d.o.o. (geodetske usluge, Zagreb) i predsjednika HKOIG-a.
+`Ti pišeš nacrte odgovora na e-mailove u ime ${profile.who}.
 Piši točno u njegovom stilu prema ovom profilu:
 
 ${styleGuide}
@@ -204,6 +221,12 @@ function toHtml(t) {
 }
 
 Office.onReady(async () => {
+  try {
+    const me = (Office.context.mailbox.userProfile.emailAddress || '').toLowerCase();
+    if (me.endsWith('@hkoig.hr')) profile = PROFILES.hkoig;
+  } catch (e) {}
+  $('reg').innerHTML = '<option value="auto">Automatski (prema pošiljatelju)</option>' +
+    profile.regs.map(([v, t]) => '<option value="' + v + '">' + t + '</option>').join('');
   await loadStyle();
   $('model').value = localStorage.getItem(LS_MODEL) || 'claude-sonnet-5-5';
   $('model').onchange = () => localStorage.setItem(LS_MODEL, $('model').value);
@@ -219,7 +242,7 @@ Office.onReady(async () => {
   showMain();
   try {
     mail = await readItem();
-    const reg = guessRegister(mail.fromEmail);
+    const reg = profile.guess(mail.fromEmail);
     $('meta').innerHTML = '<b>' + (mail.fromName || mail.fromEmail).replace(/</g, '&lt;') + '</b> · ' +
       (mail.subject || '(bez naslova)').replace(/</g, '&lt;') + '<br>Predloženi registar: <b>' + reg + '</b>';
   } catch (e) {
