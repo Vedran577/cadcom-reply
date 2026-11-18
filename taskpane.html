@@ -39,6 +39,40 @@
   <div class="row"><button class="primary" id="saveKey">Spremi ključ</button></div>
 </div>
 
+<div id="compose" class="hidden">
+  <label for="creg">Registar</label>
+  <select id="creg"></select>
+
+  <label for="cintent">O čemu je mail? <span class="mut">(obavezno)</span></label>
+  <textarea id="cintent" rows="4" placeholder="npr. traži od podugovaratelja račun za okončanu G1, 55.509,49 € + PDV, datum 14.11., valuta 30 dana; ili: pošalji DGU mjesečno izvješće za k.o. Pluska"></textarea>
+
+  <label for="clen">Duljina</label>
+  <select id="clen">
+    <option value="kratko">Kratko (kako inače pišem)</option>
+    <option value="srednje">Srednje</option>
+    <option value="detaljno">Detaljno</option>
+  </select>
+  <label style="font-weight:400"><input type="checkbox" id="csig" checked> Outlook mi sam dodaje potpis (Srdačan pozdrav / Vedran Car / …)</label>
+
+  <div class="row"><button class="primary" id="cgo">Sastavi mail</button></div>
+  <div id="cerr" class="err"></div>
+
+  <label for="csubj">Naslov</label>
+  <input type="text" id="csubj" placeholder="Prijedlog naslova">
+  <label for="cout">Tekst <span class="mut">(možete ga urediti prije umetanja)</span></label>
+  <textarea id="cout" placeholder="Ovdje će se pojaviti nacrt."></textarea>
+  <div class="row">
+    <button class="primary" id="cins" disabled>Umetni u mail</button>
+    <button id="ccopy" disabled>Kopiraj tekst</button>
+  </div>
+  <div id="cok" class="mut"></div>
+  <details>
+    <summary>Postavke</summary>
+    <div class="row"><button id="cresetKey">Promijeni API ključ</button></div>
+    <p class="mut">Na Anthropic se šalju samo primatelji, naslov, postojeći tekst ovog maila i vaša uputa, i to tek kad kliknete "Sastavi mail". Model se bira u oknu za odgovore.</p>
+  </details>
+</div>
+
 <div id="main" class="hidden">
   <label for="reg">Registar</label>
   <select id="reg"></select>
@@ -150,10 +184,12 @@ function readItem() {
   });
 }
 
+let COMPOSE = false;
 function showMain() {
   const hasKey = !!localStorage.getItem(LS_KEY);
   $('setup').classList.toggle('hidden', hasKey);
-  $('main').classList.toggle('hidden', !hasKey);
+  $('main').classList.toggle('hidden', !hasKey || COMPOSE);
+  $('compose').classList.toggle('hidden', !hasKey || !COMPOSE);
 }
 
 async function suggest() {
@@ -189,29 +225,116 @@ ${$('intent').value.trim() ? 'Vedranova uputa što odgovoriti: ' + $('intent').v
 
   $('go').disabled = true; $('go').textContent = 'Pišem…';
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: localStorage.getItem(LS_MODEL) || 'claude-sonnet-5-5',
-        max_tokens: 1500,
-        system,
-        messages: [{ role: 'user', content: user }]
-      })
-    });
-    const j = await r.json();
-    if (!r.ok) throw new Error((j.error && j.error.message) || ('HTTP ' + r.status));
-    $('out').value = (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('').trim();
+    $('out').value = await callClaude(system, user);
     ['reply', 'replyAll', 'copy'].forEach(id => $(id).disabled = false);
   } catch (e) {
     $('err').textContent = 'Greška: ' + e.message;
   } finally {
     $('go').disabled = false; $('go').textContent = 'Predloži odgovor';
+  }
+}
+
+async function callClaude(system, user) {
+  const key = localStorage.getItem(LS_KEY);
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: localStorage.getItem(LS_MODEL) || 'claude-sonnet-5-5',
+      max_tokens: 2000,
+      system,
+      messages: [{ role: 'user', content: user }]
+    })
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error((j.error && j.error.message) || ('HTTP ' + r.status));
+  return (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('').trim();
+}
+
+// ---------- Sastavljanje novog maila ----------
+const isCompose = () => { try { const it = Office.context.mailbox.item; return it && it.subject && typeof it.subject.getAsync === 'function'; } catch (e) { return false; } };
+const pget = (fn) => new Promise((res, rej) => fn(r => r.status === Office.AsyncResultStatus.Succeeded ? res(r.value) : rej(r.error)));
+let draft = { to: [], cc: [], subject: '', body: '' };
+
+async function readDraft() {
+  const it = Office.context.mailbox.item;
+  const [to, cc, subject, body] = await Promise.all([
+    pget(cb => it.to.getAsync(cb)).catch(() => []),
+    pget(cb => it.cc.getAsync(cb)).catch(() => []),
+    pget(cb => it.subject.getAsync(cb)).catch(() => ''),
+    pget(cb => it.body.getAsync(Office.CoercionType.Text, cb)).catch(() => '')
+  ]);
+  draft = { to: to || [], cc: cc || [], subject: subject || '', body: (body || '').replace(/\n{3,}/g, '\n\n').slice(0, MAX_BODY) };
+  const first = draft.to[0] ? draft.to[0].emailAddress : '';
+  const names = draft.to.map(r => r.displayName || r.emailAddress).join(', ');
+  $('meta').innerHTML = '<b>Novi mail</b>' + (names ? ' · za: ' + names.replace(/</g, '&lt;') : ' · <i>primatelj još nije upisan</i>') +
+    (first ? '<br>Predloženi registar: <b>' + profile.guess(first) + '</b>' : '');
+  if (draft.subject && !$('csubj').value) $('csubj').value = draft.subject;
+}
+
+async function composeMail() {
+  $('cerr').textContent = ''; $('cok').textContent = '';
+  if (!localStorage.getItem(LS_KEY)) return showMain();
+  if (!$('cintent').value.trim()) { $('cerr').textContent = 'Napišite ukratko o čemu je mail.'; return; }
+  await readDraft();
+  const first = draft.to[0] ? draft.to[0].emailAddress : '';
+  const reg = $('creg').value === 'auto' ? (first ? profile.guess(first) : 'procijeni iz upute (ako nije jasno: formalno, Vi-forma)') : $('creg').value;
+  const sig = $('csig').checked;
+  const system =
+`Ti pišeš NOVE e-mailove (ne odgovore) u ime ${profile.who}.
+Piši točno u njegovom stilu prema ovom profilu:
+
+${styleGuide}
+
+Pravila izlaza:
+- Format odgovora je TOČNO ovaj, bez ičega prije ili poslije:
+NASLOV: <naslov maila>
+---
+<tekst maila>
+- Naslov piši prema pravilima iz odjeljka "Novi mailovi" (kratka imenička fraza ili "[projekt] - [tema]").${draft.subject ? ' Korisnik je već upisao naslov "' + draft.subject + '"; zadrži ga osim ako je očito nepotpun.' : ''}
+- Tekst: pozdrav u prvom redu, zatim tekst koji počinje malim slovom; bez markdowna (natuknice samo sa "* ").
+- Koristi registar ${reg} iz profila, osim ako uputa jasno traži drugačije.
+- Duljina: ${$('clen').value}.
+- ${sig ? 'Outlook sam dodaje službeni potpis ("Srdačan pozdrav / Vedran Car / Direktor" s kontaktima). Za formalne registre NE piši završni pozdrav ni potpis – završi zadnjom rečenicom sadržaja. Za neformalne registre (interno, poznati suradnici) završi kratko ("LP,\nVedran", "Hvala,\nVedran" ili "V.").' : 'Outlook NE dodaje potpis: završi pozdravom i potpisom prema registru iz profila.'}
+- Ne izmišljaj činjenice, iznose, datume, priloge ni obećanja; gdje fali podatak napiši [DOPUNITI: što].
+- Ako uputa spominje prilog, napiši "u prilogu dostavljam…", ali ne izmišljaj naziv priloga.`;
+  const user =
+`Sastavi novi mail.
+
+Za: ${draft.to.map(r => (r.displayName || '') + ' <' + r.emailAddress + '>').join(', ') || '(još nije upisano)'}${draft.cc.length ? '\nCc: ' + draft.cc.map(r => (r.displayName || '') + ' <' + r.emailAddress + '>').join(', ') : ''}
+${draft.subject ? 'Upisani naslov: ' + draft.subject : 'Naslov još nije upisan.'}
+${draft.body.trim() && draft.body.trim().length > 30 ? '\n--- postojeći sadržaj maila (potpis, proslijeđena ili ranija poruka – koristi samo kao kontekst, ne ponavljaj) ---\n' + draft.body + '\n--- kraj ---\n' : ''}
+Vedranova uputa o čemu je mail: ${$('cintent').value.trim()}`;
+
+  $('cgo').disabled = true; $('cgo').textContent = 'Pišem…';
+  try {
+    const txt = await callClaude(system, user);
+    const m = txt.match(/^\s*NASLOV:\s*(.*)\n-{3,}\s*\n([\s\S]*)$/);
+    if (m) { $('csubj').value = m[1].trim(); $('cout').value = m[2].trim(); }
+    else { $('cout').value = txt; }
+    ['cins', 'ccopy'].forEach(id => $(id).disabled = false);
+  } catch (e) {
+    $('cerr').textContent = 'Greška: ' + e.message;
+  } finally {
+    $('cgo').disabled = false; $('cgo').textContent = 'Sastavi mail';
+  }
+}
+
+async function insertDraft() {
+  const it = Office.context.mailbox.item;
+  $('cerr').textContent = ''; $('cok').textContent = '';
+  try {
+    const subj = $('csubj').value.trim();
+    if (subj) await pget(cb => it.subject.setAsync(subj, cb));
+    await pget(cb => it.body.prependAsync(toHtml($('cout').value) + '<br>', { coercionType: Office.CoercionType.Html }, cb));
+    $('cok').textContent = 'Umetnuto. Provjerite tekst i [DOPUNITI] oznake prije slanja.';
+  } catch (e) {
+    $('cerr').textContent = 'Ne mogu umetnuti: ' + (e && e.message ? e.message : e) + ' – kopirajte tekst ručno.';
   }
 }
 
@@ -239,6 +362,23 @@ Office.onReady(async () => {
     try { await navigator.clipboard.writeText($('out').value); }
     catch (e) { $('out').select(); document.execCommand('copy'); }
   };
+  const regOpts = '<option value="auto">Automatski (prema primatelju)</option>' +
+    profile.regs.map(([v, t]) => '<option value="' + v + '">' + t + '</option>').join('');
+  $('creg').innerHTML = regOpts;
+  $('cgo').onclick = composeMail;
+  $('cins').onclick = insertDraft;
+  $('cresetKey').onclick = () => { localStorage.removeItem(LS_KEY); showMain(); };
+  $('ccopy').onclick = async () => {
+    const t = ($('csubj').value ? 'Naslov: ' + $('csubj').value + '\n\n' : '') + $('cout').value;
+    try { await navigator.clipboard.writeText(t); } catch (e) { $('cout').select(); document.execCommand('copy'); }
+  };
+  if (isCompose()) {
+    COMPOSE = true;
+    document.querySelector('h1').textContent = 'Sastavi mail';
+    showMain();
+    try { await readDraft(); } catch (e) { $('meta').textContent = 'Novi mail'; }
+    return;
+  }
   showMain();
   try {
     mail = await readItem();
