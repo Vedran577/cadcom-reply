@@ -97,7 +97,7 @@ const PROFILES = {
     regs: [['T', 'T – Tajništvo Komore'], ['K', 'K – kolege dužnosnici / članovi'], ['I', 'I – institucije, Vi-forma'], ['M', 'M – međunarodno (engleski)'], ['V', 'V – vanjski suradnici / dobavljači']],
     guess: email => {
       const d = (email.split('@')[1] || '').toLowerCase();
-      if (d === 'hkoig.hr') return 'T ili K (prema potpisu pošiljatelja: zaposlenik Tajništva = T, dužnosnik/član = K)';
+      if (d === 'hkoig.hr') return 'T (Tajništvo – UVIJEK vi-forma, nikad ti; K samo ako je pošiljatelj očito dužnosnik/član tijela Komore, a ne zaposlenik Tajništva. Ako nisi siguran: vi-forma.)';
       if (/\.(hr)$/.test(d) && /(gov|dgu|mpgi|mpudt|mingo|mfin|komora|hka|hkig|hkis|hkie|hkiz|hkas)/.test(d)) return 'I';
       if (!/\.hr$/.test(d) && !/(gmail|outlook|hotmail|yahoo)\./.test(d)) return 'M';
       if (/(gmail|outlook|hotmail|yahoo|icloud)\./.test(d)) return 'K';
