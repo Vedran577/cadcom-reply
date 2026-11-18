@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prijedlog odgovora</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<style>
+  :root { --c:#0b5394; --bg:#f6f8fa; --bd:#d0d7de; --tx:#1f2328; --mut:#656d76; --err:#b42318; }
+  * { box-sizing: border-box; }
+  body { font: 13px/1.45 "Segoe UI", system-ui, sans-serif; color: var(--tx); margin: 0; padding: 12px; }
+  h1 { font-size: 15px; margin: 0 0 8px; color: var(--c); }
+  label { display:block; font-weight:600; margin:10px 0 4px; }
+  select, textarea, input[type=password], input[type=text] { width:100%; padding:6px 8px; border:1px solid var(--bd); border-radius:4px; font:inherit; }
+  textarea { resize: vertical; }
+  #out { min-height: 220px; font-family: inherit; background: #fff; }
+  .row { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  button { padding:6px 10px; border:1px solid var(--bd); border-radius:4px; background:#fff; cursor:pointer; font:inherit; }
+  button.primary { background: var(--c); border-color: var(--c); color:#fff; font-weight:600; }
+  button:disabled { opacity:.5; cursor:default; }
+  .meta { background: var(--bg); border:1px solid var(--bd); border-radius:4px; padding:6px 8px; color: var(--mut); font-size:12px; }
+  .meta b { color: var(--tx); }
+  .err { color: var(--err); margin-top:6px; white-space: pre-wrap; }
+  .mut { color: var(--mut); font-size:12px; }
+  .hidden { display:none; }
+  details { margin-top: 14px; }
+  summary { cursor:pointer; color: var(--mut); }
+</style>
+</head>
+<body>
+<h1>Prijedlog odgovora</h1>
+
+<div id="meta" class="meta">Učitavam poruku…</div>
+
+<div id="setup" class="hidden">
+  <label for="key">Claude API ključ</label>
+  <input type="password" id="key" placeholder="sk-ant-…">
+  <div class="mut">Ključ se sprema samo na ovom računalu (lokalna pohrana dodatka). Izrađuje se u Claude Console → API Keys.</div>
+  <div class="row"><button class="primary" id="saveKey">Spremi ključ</button></div>
+</div>
+
+<div id="main" class="hidden">
+  <label for="reg">Registar</label>
+  <select id="reg">
+    <option value="auto">Automatski (prema pošiljatelju)</option>
+    <option value="A">A – interno (Cadcom/Darna), ti-forma</option>
+    <option value="B">B – poznati vanjski suradnik</option>
+    <option value="C">C – institucija / naručitelj, Vi-forma</option>
+    <option value="D">D – kandidat / stranka, Vi-forma</option>
+    <option value="E">E – dobavljač / mediji, vrlo kratko</option>
+  </select>
+
+  <label for="intent">Što želite poručiti? <span class="mut">(neobavezno)</span></label>
+  <textarea id="intent" rows="3" placeholder="npr. prihvati, predloži utorak u 10 h; ili: odbij ljubazno; ili: traži nadopunu podataka do petka"></textarea>
+
+  <label for="len">Duljina</label>
+  <select id="len">
+    <option value="kratko">Kratko (kako inače pišem)</option>
+    <option value="srednje">Srednje</option>
+    <option value="detaljno">Detaljno</option>
+  </select>
+
+  <div class="row">
+    <button class="primary" id="go">Predloži odgovor</button>
+  </div>
+  <div id="err" class="err"></div>
+
+  <label for="out">Nacrt <span class="mut">(možete ga urediti prije otvaranja)</span></label>
+  <textarea id="out" placeholder="Ovdje će se pojaviti prijedlog."></textarea>
+  <div class="row">
+    <button id="reply" disabled>Otvori kao odgovor</button>
+    <button id="replyAll" disabled>Odgovori svima</button>
+    <button id="copy" disabled>Kopiraj</button>
+  </div>
+
+  <details>
+    <summary>Postavke</summary>
+    <label for="model">Model</label>
+    <select id="model">
+      <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (brz, jeftiniji)</option>
+      <option value="claude-opus-5-5">Claude Opus 5.5 (najkvalitetniji, sporiji)</option>
+    </select>
+    <div class="row"><button id="resetKey">Promijeni API ključ</button></div>
+    <p class="mut">Na Anthropic se šalje samo poruka koju ste otvorili (naslov, pošiljatelj, tekst) i vaša uputa, i to tek kad kliknete "Predloži odgovor". Ništa se ne šalje automatski.</p>
+  </details>
+</div>
+
+<script>
+const LS_KEY = 'cadcom_reply_apikey';
+const LS_MODEL = 'cadcom_reply_model';
+const MAX_BODY = 15000;
+
+// Domene za automatski izbor registra (iz analize poslane pošte).
+const DOMAINS = {
+  A: ['cadcom.hr', 'darnadar.hr', 'darna.biz'],
+  B: ['gzr.hr', 'planetix.eu', 'zzf.hr', 'hkoig.hr', 'odbori.hkoig.hr', 'inteling.hr', 'geozavod-st.hr',
+      'geoprojekt.hr', 'geoprojekt.com', 'geomodeling.hr', 'geodetskamjerenja.hr', 'geo-gauss.hr',
+      'hidrocibalae.hr', 'geocibalae.com', 'geometricus.hr', 'stcadesign.com', 'glatarhitektura.hr', 'kproject.eu'],
+  C: ['dgu.hr', 'mpgi.hr', 'hrvatske-ceste.hr', 'voda.hr', 'vodoprivreda-sisak.hr', 'hep.hr', 'ccaa.hr',
+      'hzz.hr', 'mingo.hr', 'mfin.hr', 'hrsume.hr', 'zagreb.hr', 'hup.hr', 'hgk.hr', 'koncar.hr', 'hzpp.hr']
+};
+function guessRegister(email) {
+  const d = (email.split('@')[1] || '').toLowerCase();
+  for (const [r, list] of Object.entries(DOMAINS)) if (list.some(x => d === x || d.endsWith('.' + x))) return r;
+  if (/^(opcina|grad|zupanija)[-.]/.test(d) || /\.gov\.hr$/.test(d) || /(opcina|grad)-/.test(d)) return 'C';
+  if (/(gmail|yahoo|hotmail|outlook|icloud|net\.hr|t-com\.hr|inet\.hr)\./.test(d) || /^(gmail|outlook|hotmail)\.com$/.test(d)) return 'D';
+  return 'C'; // nepoznata organizacija: radije formalno
+}
+
+let mail = null, styleGuide = '';
+const $ = id => document.getElementById(id);
+
+async function loadStyle() {
+  try { styleGuide = await (await fetch('stil.md', { cache: 'no-cache' })).text(); }
+  catch (e) { styleGuide = ''; }
+}
+
+function readItem() {
+  return new Promise((resolve, reject) => {
+    const it = Office.context.mailbox.item;
+    it.body.getAsync(Office.CoercionType.Text, res => {
+      if (res.status !== Office.AsyncResultStatus.Succeeded) return reject(res.error);
+      resolve({
+        subject: it.subject || '',
+        fromName: it.from ? it.from.displayName : '',
+        fromEmail: it.from ? it.from.emailAddress : '',
+        to: (it.to || []).map(r => r.displayName + ' <' + r.emailAddress + '>').join(', '),
+        cc: (it.cc || []).map(r => r.displayName + ' <' + r.emailAddress + '>').join(', '),
+        date: it.dateTimeCreated ? new Date(it.dateTimeCreated).toLocaleString('hr-HR') : '',
+        body: (res.value || '').replace(/\n{3,}/g, '\n\n').slice(0, MAX_BODY)
+      });
+    });
+  });
+}
+
+function showMain() {
+  const hasKey = !!localStorage.getItem(LS_KEY);
+  $('setup').classList.toggle('hidden', hasKey);
+  $('main').classList.toggle('hidden', !hasKey);
+}
+
+async function suggest() {
+  $('err').textContent = '';
+  const key = localStorage.getItem(LS_KEY);
+  if (!key) return showMain();
+  const reg = $('reg').value === 'auto' ? guessRegister(mail.fromEmail) : $('reg').value;
+  const system =
+`Ti pišeš nacrte odgovora na e-mailove u ime Vedrana Cara, direktora tvrtke Cadcom d.o.o. (geodetske usluge, Zagreb) i predsjednika HKOIG-a.
+Piši točno u njegovom stilu prema ovom profilu:
+
+${styleGuide}
+
+Pravila izlaza:
+- Vrati SAMO tekst odgovora (pozdrav, tijelo, završetak), bez naslova, bez objašnjenja, bez navodnika, bez markdowna.
+- Koristi registar ${reg} iz profila, osim ako sadržaj poruke jasno traži drugačije.
+- Duljina: ${$('len').value}.
+- Ne izmišljaj činjenice, iznose, datume ni obećanja; gdje fali podatak napiši [DOPUNITI: što].
+- Ne citiraj izvornu poruku.`;
+  const user =
+`Odgovori na ovu poruku.
+
+Od: ${mail.fromName} <${mail.fromEmail}>
+Za: ${mail.to}${mail.cc ? '\nCc: ' + mail.cc : ''}
+Datum: ${mail.date}
+Naslov: ${mail.subject}
+
+--- tekst poruke (može sadržavati raniju prepisku) ---
+${mail.body}
+--- kraj ---
+
+${$('intent').value.trim() ? 'Vedranova uputa što odgovoriti: ' + $('intent').value.trim() : 'Vedran nije dao uputu: napiši najprirodniji odgovor; ako je potrebna odluka koju ne možeš znati, ostavi [DOPUNITI: …].'}`;
+
+  $('go').disabled = true; $('go').textContent = 'Pišem…';
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: localStorage.getItem(LS_MODEL) || 'claude-sonnet-5-5',
+        max_tokens: 1500,
+        system,
+        messages: [{ role: 'user', content: user }]
+      })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error((j.error && j.error.message) || ('HTTP ' + r.status));
+    $('out').value = (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('').trim();
+    ['reply', 'replyAll', 'copy'].forEach(id => $(id).disabled = false);
+  } catch (e) {
+    $('err').textContent = 'Greška: ' + e.message;
+  } finally {
+    $('go').disabled = false; $('go').textContent = 'Predloži odgovor';
+  }
+}
+
+function toHtml(t) {
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return '<div style="font-family:Calibri,Arial,sans-serif;font-size:11pt">' + esc(t).replace(/\n/g, '<br>') + '</div>';
+}
+
+Office.onReady(async () => {
+  await loadStyle();
+  $('model').value = localStorage.getItem(LS_MODEL) || 'claude-sonnet-5-5';
+  $('model').onchange = () => localStorage.setItem(LS_MODEL, $('model').value);
+  $('saveKey').onclick = () => { const v = $('key').value.trim(); if (v) { localStorage.setItem(LS_KEY, v); $('key').value = ''; showMain(); } };
+  $('resetKey').onclick = () => { localStorage.removeItem(LS_KEY); showMain(); };
+  $('go').onclick = suggest;
+  $('reply').onclick = () => Office.context.mailbox.item.displayReplyForm(toHtml($('out').value));
+  $('replyAll').onclick = () => Office.context.mailbox.item.displayReplyAllForm(toHtml($('out').value));
+  $('copy').onclick = async () => {
+    try { await navigator.clipboard.writeText($('out').value); }
+    catch (e) { $('out').select(); document.execCommand('copy'); }
+  };
+  showMain();
+  try {
+    mail = await readItem();
+    const reg = guessRegister(mail.fromEmail);
+    $('meta').innerHTML = '<b>' + (mail.fromName || mail.fromEmail).replace(/</g, '&lt;') + '</b> · ' +
+      (mail.subject || '(bez naslova)').replace(/</g, '&lt;') + '<br>Predloženi registar: <b>' + reg + '</b>';
+  } catch (e) {
+    $('meta').textContent = 'Ne mogu pročitati poruku: ' + (e && e.message ? e.message : e);
+  }
+});
+</script>
+</body>
+</html>
