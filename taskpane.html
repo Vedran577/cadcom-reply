@@ -121,12 +121,14 @@ const MAX_BODY = 15000;
 const PROFILES = {
   cadcom: {
     file: 'stil.md',
+    autoSig: true,
     who: 'Vedrana Cara, direktora tvrtke Cadcom d.o.o. (geodetske usluge, Zagreb)',
     regs: [['A', 'A – interno (Cadcom/Darna), ti-forma'], ['B', 'B – poznati vanjski suradnik'], ['C', 'C – institucija / naručitelj, Vi-forma'], ['D', 'D – kandidat / stranka, Vi-forma'], ['E', 'E – dobavljač / mediji, vrlo kratko']],
     guess: email => guessRegister(email)
   },
   hkoig: {
     file: 'stil-hkoig.md',
+    autoSig: false,
     who: 'Vedrana Cara, predsjednika Hrvatske komore ovlaštenih inženjera geodezije (HKOIG)',
     regs: [['T', 'T – Tajništvo Komore'], ['K', 'K – kolege dužnosnici / članovi'], ['I', 'I – institucije, Vi-forma'], ['M', 'M – međunarodno (engleski)'], ['V', 'V – vanjski suradnici / dobavljači']],
     guess: email => {
@@ -365,6 +367,7 @@ Office.onReady(async () => {
   const regOpts = '<option value="auto">Automatski (prema primatelju)</option>' +
     profile.regs.map(([v, t]) => '<option value="' + v + '">' + t + '</option>').join('');
   $('creg').innerHTML = regOpts;
+  $('csig').checked = !!profile.autoSig;
   $('cgo').onclick = composeMail;
   $('cins').onclick = insertDraft;
   $('cresetKey').onclick = () => { localStorage.removeItem(LS_KEY); showMain(); };

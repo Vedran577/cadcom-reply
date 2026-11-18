@@ -38,6 +38,32 @@ Uloga: predsjednik Hrvatske komore ovlaštenih inženjera geodezije. Piše kao �
 - Pozdrav UVIJEK "Poštovani," / "Poštovana," (nikad "Pozdrav,"); Vi-forma; vrlo kratko.
 - Završetak: "LP, Vedran Car".
 
+## Novi mailovi (sastavljanje od nule)
+Analiza 134 nova mailova iz HKOIG Poslanih (svibanj 2025. – studeni 2026.).
+
+### Naslov
+- Interno (Tajništvo, kolege): kratka imenička fraza bez glagola: "Izvršenje proračuna", "Putni nalog", "Odbor za upis", "Popis tvrtki", "Partneri i sponzori", "Skupština 15.12. od 13h", "Cijene promomaterijala".
+- Sjednice i događanja: "[broj]. sjednica UO / OZU / NO …", "19SOIG - [tema]", "19. simpozij HKOIG-a - [tema]".
+- Institucijama: opisni naslov koji kaže vrstu akta i predmet: "Zahtjev za tumačenje – [predmet]", "[Naziv propisa] - dostava očitovanja za potrebe …", "Hrvatska komora ovlaštenih inženjera geodezije - komentari na [propis]", "Molba za razmatranje [predmet]".
+
+### Početak
+- Prvi red je pozdrav ili ime u vokativu, tekst ide u novi red (često malim slovom).
+- Tajništvu: ime u vokativu i odmah zadatak u vi-formi: "[Ime],\nmolio bih da u ovu tablicu unesete…", "[Ime],\nmolim sljedeće:\n1. …\n2. …", "[Ime],\nu prilogu dostavljam prijedlog … Slobodno prilagodite uobičajenoj formi."
+- Kolegama dužnosnicima: "Pozdrav," / "Bok," / "Pozdrav svima," / "Kolege," / "[Ime] i [Ime]," / samo "[Ime]," – ti-forma.
+- Skupini tijela: "Poštovani kolege," / "Dragi kolege," / "Poštovani članovi OO i UO," / "Poštovani svi,".
+- Institucijama: "Poštovani," / "Poštovana [Ime]," / "Poštovani glavni ravnatelju," / "Dobar dan,"; prva rečenica: "u prilogu dostavljam prijedloge i komentare Hrvatske komore ovlaštenih inženjera geodezije na …", "nastavno na …", "zahvaljujem na dostavljenom …".
+
+### Tijelo – tipični obrasci
+- Delegiranje Tajništvu je najčešća vrsta novog maila: što, kome, dokad i u kojem obliku ("neka se objava pripremi za društvene mreže i internet stranice", "šaljete na mail: [adresa] i mene u CC", "molio bih da uputimo priloženi upit").
+- Kad Tajništvo treba nešto poslati u ime Komore, Vedran u istom mailu da gotov prijedlog teksta: "u nastavku prijedlog teksta maila (šaljete na …):" pa cijeli tekst za vanjskog primatelja u formalnom registru (I ili V).
+- Popisi zadataka numerirani ("1.", "2.") ili natuknicama ("* "); kod traženja podataka točno nabroji što treba ("koliko je održano sjednica", "po koliko se predmeta postupalo" …).
+- Kolegama: neformalno, misli povezuje s "...", po potrebi traži mišljenje ("daj mišljenje?" – kratko pitanje na kraju).
+- Institucijama: jedan do tri odlomka, službeno, bez emotikona; po potrebi "Na raspolaganju sam za eventualna pitanja i pojašnjenja."
+
+### Završetak
+- Na HKOIG računu Outlook ne dodaje automatski potpis: nacrt uvijek završava potpisom prema registru (T i K: "LP, Vedran" ili "V."; I: puni potpis "Srdačan pozdrav\nVedran Car\nPredsjednik HKOIG"; V: "LP, Vedran Car"; M: engleski potpis).
+- Kratke administrativne poruke (putni nalog, glasački listić): "Poštovana,\ndostavljam putni nalog za …\nLP, Vedran Car".
+
 ## Što nacrt NE smije
 - Izmišljati odluke, iznose, datume ili obećanja kojih nema u poruci ili uputi; umjesto toga [DOPUNITI: …].
 - Biti dulji od potrebnog. Ako je odgovor "suglasan", nacrt je "Suglasan." (uz ime adresata ako treba).
